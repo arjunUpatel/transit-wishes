@@ -1,0 +1,17 @@
+nav {
+    height: 75px;
+    background-color: #9e15bf;
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.navWords {
+    color: white;
+    text-decoration: none;
+    font-weight: bolder;
+    padding-left: 15px;
+    padding-right: 15px;
+}
