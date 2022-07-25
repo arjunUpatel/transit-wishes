@@ -1,5 +1,6 @@
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api'
 import Navbar from './Navbar';
+import React from 'react';
 
 export default function Map() {
   const { isLoaded } = useLoadScript({
