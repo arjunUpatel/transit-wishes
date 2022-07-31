@@ -1,17 +1,35 @@
-nav {
+.nav-container {
     height: 75px;
-    background-color: #9e15bf;
+    background-color: #312C38;
     display: flex;
     align-items: center;
     font-size: 16px;
     overflow-x: auto;
     overflow-y: hidden;
+    padding-right: 10px;
+    padding-left: 10px;
 }
 
-.navWords {
+.nav-link {
     color: white;
     text-decoration: none;
     font-weight: bolder;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+    transition: color 1s ease;
+}
+
+.nav-link:hover {
+    color: #E73C37;
+}
+
+#nav-home {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding-right: 10px;
+}
+
+#nav-home-words {
+    padding-left: 10px;
 }
