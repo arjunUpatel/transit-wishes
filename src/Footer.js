@@ -12,7 +12,7 @@ export default function Footer() {
       </div>
        */}
       <div className='footer-bottom'>
-        <p>© {new Date().getFullYear()} Arjun Patel</p>
+        <span>© {new Date().getFullYear()} Arjun Patel</span>
       </div>
     </footer>
   )

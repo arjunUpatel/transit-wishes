@@ -11,7 +11,7 @@ export default function App() {
         <img height={300} width={300} src={logo} />
         <h1>Transit</h1>
         <h1 id='wishes'>Wishes</h1>
-        <p>Make your transit needs heard</p>
+        <p className='home-para'>Make your transit needs heard</p>
       </div>
 
       <div className='home-nav'>

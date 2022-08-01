@@ -1,3 +1,16 @@
 .about-container {
-    background-color: #F7EFE7;
+  max-width: 1260px;
+  display: flex;
+  flex-direction: column;
+  margin: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.about-subheading {
+  padding-top: 30px;
+}
+
+.about-para {
+  padding-top: 10px
 }

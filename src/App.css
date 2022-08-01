@@ -5,7 +5,7 @@
   font-weight: 550;
   padding-left: 10px;
   padding-right: 10px;
-  transition: color 1s ease;
+  transition: color .5s ease;
 }
 
 .home-link:hover {
@@ -26,4 +26,10 @@
   display: flex;
   padding-top: 20px;
   justify-content: center;
+}
+
+.home-para {
+  font-size: 24px;
+  padding-bottom: 20px;
+  padding-top: 20px;
 }
