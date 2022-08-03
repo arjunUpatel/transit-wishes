@@ -15,7 +15,7 @@ export default function About() {
           <h2 className="about-subheading">How to Use the Services on This Website?</h2>
           <p className="about-para">Transit Wishes is a way for people to make their transit needs heard. Contributing to <b>The Map</b> through the <b>Make a Wish</b> page aids in the creation of data which can be used to advocate for transit projects. <b>Voice your Needs</b> page has been created to make it easier for individuals and advocates to obtain the data available on this website and make their needs heard to their elected representatives.</p>
           <h2 className="about-subheading">The Impact</h2>
-          <p className="about-para">Have success stories? Use the social media links on the top right and share it with the me to have your story featured here!</p>
+          <p className="about-para">Have success stories? Use the email at the bottom and share it with the developer to have your story featured here!</p>
         </div>
       </div>
       <Footer></Footer>
