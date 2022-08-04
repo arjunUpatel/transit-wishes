@@ -6,8 +6,8 @@ import Footer from "./Footer";
 export default function About() {
   return (
     <>
+      <Navbar />
       <div className="main">
-        <Navbar></Navbar>
         <div className='about-container'>
           <h1>About</h1>
           <h2 className="about-subheading">The Motivation</h2>
@@ -18,7 +18,7 @@ export default function About() {
           <p className="about-para">Have success stories? Use the email at the bottom and share it with the developer to have your story featured here!</p>
         </div>
       </div>
-      <Footer></Footer>
+      <Footer />
     </>
   )
 }

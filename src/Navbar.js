@@ -10,13 +10,13 @@ export default function Navbar() {
       <nav className='nav-container'>
         <Link id='nav-home' className='nav-link' to="/">
           <img height={45} width={45} src={logo} />
-          <a id='nav-home-words'> Transit Wishes</a>
+          <b id='nav-home-words'>Transit Wishes</b>
         </Link>
         <div className='nav-words'>
-          <Link id='nav-about' className='nav-link' to="/about">About</Link>
-          <Link id='nav-map' className='nav-link' to="/the-map">The Map</Link>
-          <Link id='nav-submit' className='nav-link' to="/make-a-wish">Make a Wish</Link>
-          <Link id='nav-spam' className='nav-link' to="/voice-your-needs">Voice your Needs</Link>
+          <Link id='nav-about' className='nav-link' to="/about"><b>About</b></Link>
+          <Link id='nav-map' className='nav-link' to="/the-map"><b>The Map</b></Link>
+          <Link id='nav-submit' className='nav-link' to="/make-a-wish"><b>Make a Wish</b></Link>
+          <Link id='nav-spam' className='nav-link' to="/voice-your-needs"><b>Voice your Needs</b></Link>
           <Outlet />
         </div>
       </nav>
