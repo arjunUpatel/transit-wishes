@@ -1,31 +1,9 @@
-.home-link {
-  text-decoration: none;
-  font-size: 20px;
-  color: white;
-  font-weight: 550;
-  padding-left: 10px;
-  padding-right: 10px;
-  transition: color .5s ease;
-}
-
-.home-link:hover {
-  color: #E73C37;
-}
-
 .home-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: #F7EFE7;
   padding-top: 30px;
-}
-
-.home-nav {
-  margin: auto;
-  background-color: #312C38;
-  display: flex;
-  padding-top: 20px;
-  justify-content: center;
 }
 
 .home-para {
