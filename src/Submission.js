@@ -1,20 +1,10 @@
 import Navbar from "./Navbar";
-import React, { useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import './Submission.css'
 import Footer from "./Footer";
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api'
-
-function SubmitButton() {
-  const handleClick = () => {
-
-  }
-
-  return (
-    <button onClick={handleClick}>
-      Submit
-    </button>
-  )
-}
+import { GoogleMap, useLoadScript, Marker, InfoWindow } from '@react-google-maps/api'
+import { v4 as uuidv4 } from 'uuid';
+import mapStyles from "./mapStyles";
 
 export default function Submission() {
 
@@ -22,12 +12,47 @@ export default function Submission() {
   const center = { lat: 40.0583, lng: -74.4057 }
   const options = {
     disableDefaultUI: true,
+    styles: mapStyles,
   }
-  const [markers, setMarkers] = useState([])
+
+  const [confirmedMarkers, setConfirmedMarkers] = useState([])
+  const [unconfirmedMarker, setUnconfirmedMarker] = useState()
+
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_MAPS_API_KEY,
     libraries,
   })
+  const mapRef = useRef()
+  const onMapClick = useCallback((event) => {
+    setUnconfirmedMarker(
+      {
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng(),
+        uuid: uuidv4(),
+        confirmed: false,
+        editable: false,
+      }
+    )
+  }, [])
+  const onMapLoad = useCallback((map) => {
+    mapRef.current = map
+  }, [])
+
+  const onConfirmClick = () => {
+    setConfirmedMarkers((current) =>
+      [
+        ...current, unconfirmedMarker ? (
+          {
+            lat: unconfirmedMarker.lat,
+            lng: unconfirmedMarker.lng,
+            uuid: unconfirmedMarker.uuid,
+            confirmed: !unconfirmedMarker.confirmed,
+            editable: !unconfirmedMarker.editable,
+          }
+        ) : undefined
+      ])
+    setUnconfirmedMarker(null)
+  }
 
   if (loadError) return <div>Error loading maps</div>
   if (!isLoaded) return <div>Loading...</div>
@@ -50,28 +75,39 @@ export default function Submission() {
             center={center}
             mapContainerClassName='map-container'
             options={options}
-            onClick={(event) => {
-              setMarkers((current) => [
-                ...current,
-                {
-                  lat: event.latLng.lat(),
-                  lng: event.latLng.lng(),
-                  time: new Date(),
-                }
-              ])
-            }}
+            onClick={onMapClick}
+            onLoad={onMapLoad}
           >
-            {markers.map((marker) => (
+            {confirmedMarkers.map((marker) =>
               <Marker
-                key={marker.time}
+                key={marker.uuid}
                 position={{ lat: marker.lat, lng: marker.lng }}
+              // onMouseOver={onMarkerHover /* show the options to comfirm the marker, edit the position of the marker or delete the marker pair*/}
               />
-            ))}
+            )}
+
+            {unconfirmedMarker ? (<Marker
+              key={unconfirmedMarker.uuid}
+              position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
+            />) : null}
+
+            {unconfirmedMarker ? (<InfoWindow position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
+              options={{ pixelOffset: new window.google.maps.Size(0, -30) }}>
+              <button onClick={onConfirmClick}>Confirm Location</button>
+            </InfoWindow>) : null}
+
           </GoogleMap>
           <SubmitButton />
         </div>
       </div>
       <Footer />
     </>
+  )
+}
+
+function SubmitButton() {
+  const onClick = () => { }
+  return (
+    <button onClick={onClick}>Submit</button>
   )
 }
