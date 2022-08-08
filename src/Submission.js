@@ -5,8 +5,6 @@ import Footer from "./Footer";
 import { GoogleMap, useLoadScript, Marker, InfoWindow } from '@react-google-maps/api'
 import { v4 as uuidv4 } from 'uuid';
 import mapStyles from "./mapStyles";
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 
 export default function Submission() {
 
@@ -44,6 +42,22 @@ export default function Submission() {
     setSelected(unconfirmedMarker)
   }, [])
 
+  const onUnconfirmedMarkerDblClick = () => {
+    setConfirmedMarkers((current) =>
+      [
+        ...current, unconfirmedMarker ? (
+          {
+            lat: unconfirmedMarker.lat,
+            lng: unconfirmedMarker.lng,
+            uuid: unconfirmedMarker.uuid,
+            confirmed: true,
+          }
+        ) : undefined
+      ])
+    setUnconfirmedMarker(null)
+    setSelected(null)
+  }
+
   function SubmitButton() {
     const onClick = () => { }
     return (
@@ -51,29 +65,7 @@ export default function Submission() {
     )
   }
 
-  function ConfirmButton() {
-    const onConfirmClick = () => {
-      setConfirmedMarkers((current) =>
-        [
-          ...current, unconfirmedMarker ? (
-            {
-              lat: unconfirmedMarker.lat,
-              lng: unconfirmedMarker.lng,
-              uuid: unconfirmedMarker.uuid,
-              confirmed: true,
-            }
-          ) : undefined
-        ])
-      setUnconfirmedMarker(null)
-      setSelected(null)
-    }
-    return (
-      <button onClick={onConfirmClick}>Confirm Location</button>
-    )
-  }
-
   function MarkerInfoWindow({ marker }) {
-    // const notify = () => toast("Wow so easy!");
     const removeConfirmedMarkerFromArr = () => {
       let confirmedMarkersArr = confirmedMarkers
       let index = confirmedMarkersArr.indexOf(marker);
@@ -84,32 +76,20 @@ export default function Submission() {
     }
     const onEditClick = () => {
       if (unconfirmedMarker) {
-        // a marker is unconfirmed on the map. show toast to notify user to confirm that marker
-        // have button in toast to pan to unconfirmed marker
-        // <ToastContainer
-        //   position="bottom-center"
-        //   autoClose={5000}
-        //   hideProgressBar={false}
-        //   newestOnTop={false}
-        //   closeOnClick
-        //   rtl={false}
-        //   pauseOnFocusLoss
-        //   draggable
-        //   pauseOnHover
-        // />
+
       }
       else {
-        console.log("got here")
         removeConfirmedMarkerFromArr()
         setUnconfirmedMarker(marker)
         setSelected(null)
       }
     }
+
     const onRemoveClick = () => {
       removeConfirmedMarkerFromArr()
       setSelected(null)
     }
-    console.log(marker.confirmed)
+
     if (marker.confirmed) {
       return (
         <div>
@@ -118,11 +98,6 @@ export default function Submission() {
             Edit</button>
           <button onClick={onRemoveClick}>Remove</button>
         </div>
-      )
-    }
-    else {
-      return (
-        <ConfirmButton />
       )
     }
   }
@@ -158,7 +133,8 @@ export default function Submission() {
               <Marker
                 key={marker.uuid}
                 position={{ lat: marker.lat, lng: marker.lng }}
-                onClick={() => {
+                // onClick={} show info about marker
+                onRightClick={() => {
                   setSelected(marker)
                 }}
                 animation={2}
@@ -170,15 +146,9 @@ export default function Submission() {
               key={unconfirmedMarker.uuid}
               position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
               animation={1}
-              onClick={() => {
-                setSelected(unconfirmedMarker)
-              }}
+              // onClick={} show info about the marker if you decide to do so
+              onDblClick={onUnconfirmedMarkerDblClick}
             />) : null}
-
-            {unconfirmedMarker ? (<InfoWindow position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
-              options={{ pixelOffset: new window.google.maps.Size(0, -30) }}>
-              <ConfirmButton />
-            </InfoWindow>) : null}
 
             {selected ? (<InfoWindow position={{ lat: selected.lat, lng: selected.lng }}
               options={{ pixelOffset: new window.google.maps.Size(0, -30) }}

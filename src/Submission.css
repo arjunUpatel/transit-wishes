@@ -15,6 +15,9 @@
   padding-top: 10px;
 }
 
-.gm-style .gm-style-iw-c {
-  padding: 12px;
+.submission-toast-area {
+  position: fixed;
+  bottom: 100px;
+  left: auto;
+  right: auto;
 }
