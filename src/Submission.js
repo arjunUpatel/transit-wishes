@@ -11,8 +11,9 @@ export default function Submission() {
   // states stuff
   const [libraries] = useState(['places']);
   const [confirmedMarkers, setConfirmedMarkers] = useState([])
-  const [unconfirmedMarker, setUnconfirmedMarker] = useState()
+  const [unconfirmedMarker, setUnconfirmedMarker] = useState(undefined)
   const [selected, setSelected] = useState(null)
+  const [placementIdx, setPlacementIdx] = useState(0)
 
   // google maps setup stuff
   const center = { lat: 40.0583, lng: -74.4057 }
@@ -30,32 +31,65 @@ export default function Submission() {
   }, [])
 
   // marker stuff
-  const onMapClick = useCallback((event) => {
-    setUnconfirmedMarker(
-      {
+  const onMapClick = (event) => {
+    if (unconfirmedMarker) {
+      setUnconfirmedMarker({
+        lat: event.latLng.lat(),
+        lng: event.latLng.lng(),
+        uuid: unconfirmedMarker.uuid,
+        confirmed: unconfirmedMarker.confirmed,
+      })
+    } else {
+      setUnconfirmedMarker({
         lat: event.latLng.lat(),
         lng: event.latLng.lng(),
         uuid: uuidv4(),
         confirmed: false,
-      }
-    )
-    setSelected(unconfirmedMarker)
-  }, [])
+      })
+    }
+  }
 
   const onUnconfirmedMarkerDblClick = () => {
-    setConfirmedMarkers((current) =>
-      [
-        ...current, unconfirmedMarker ? (
-          {
+    const confirmedMarkersArr = confirmedMarkers
+    if (unconfirmedMarker) {
+      if (placementIdx === confirmedMarkersArr.length) {
+        console.log("got here 1")
+        confirmedMarkersArr.push([{
+          lat: unconfirmedMarker.lat,
+          lng: unconfirmedMarker.lng,
+          uuid: unconfirmedMarker.uuid,
+          confirmed: true,
+        }])
+      } else {
+        console.log("got here 2")
+        if (confirmedMarkers[placementIdx].length < 2) {
+          confirmedMarkersArr[placementIdx].push({
             lat: unconfirmedMarker.lat,
             lng: unconfirmedMarker.lng,
             uuid: unconfirmedMarker.uuid,
             confirmed: true,
+          })
+        }
+        else {
+          console.log("got here 3")
+          for (let i = 0; i < confirmedMarkersArr[placementIdx].length; i++) {
+            if (confirmedMarkersArr[placementIdx][i] == null) {
+              confirmedMarkersArr[placementIdx][i] = {
+                lat: unconfirmedMarker.lat,
+                lng: unconfirmedMarker.lng,
+                uuid: unconfirmedMarker.uuid,
+                confirmed: true,
+              }
+              break;
+            }
           }
-        ) : undefined
-      ])
-    setUnconfirmedMarker(null)
-    setSelected(null)
+        }
+        setPlacementIdx(confirmedMarkersArr.length)
+      }
+      setConfirmedMarkers(confirmedMarkersArr)
+      setUnconfirmedMarker(null)
+      setSelected(null)
+    }
   }
 
   function SubmitButton() {
@@ -94,8 +128,7 @@ export default function Submission() {
       return (
         <div>
           {/* // a marker is unconfirmed, when edit button is pressed, show pop up to confirm other marker */}
-          <button onClick={onEditClick}>
-            Edit</button>
+          <button onClick={onEditClick}>Edit</button>
           <button onClick={onRemoveClick}>Remove</button>
         </div>
       )
@@ -129,18 +162,23 @@ export default function Submission() {
             onClick={onMapClick}
             onLoad={onMapLoad}
           >
-            {confirmedMarkers.map((marker) =>
-              <Marker
-                key={marker.uuid}
-                position={{ lat: marker.lat, lng: marker.lng }}
-                // onClick={} show info about marker
-                onRightClick={() => {
-                  setSelected(marker)
-                }}
-                animation={2}
-                label={"10"}
-              />
-            )}
+            {confirmedMarkers.map((markerTuple) => {
+              return (markerTuple.map((marker) => {
+                console.log(marker)
+                return (
+                  <Marker
+                    key={marker.uuid}
+                    position={{ lat: marker.lat, lng: marker.lng }}
+                    // onClick={} show info about marker
+                    onRightClick={() => {
+                      setSelected(marker)
+                    }}
+                    animation={2}
+                    label={"10"}
+                  />
+                )
+              }))
+            })}
 
             {unconfirmedMarker ? (<Marker
               key={unconfirmedMarker.uuid}
