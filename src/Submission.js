@@ -1,15 +1,15 @@
-import Navbar from "./Navbar";
-import React, { useCallback, useRef, useState } from 'react';
+import Navbar from "./Navbar"
+import React, { useCallback, useRef, useState } from 'react'
 import './Submission.css'
-import Footer from "./Footer";
-import { GoogleMap, useLoadScript, Marker, InfoWindow } from '@react-google-maps/api'
-import { v4 as uuidv4 } from 'uuid';
-import mapStyles from "./mapStyles";
+import Footer from "./Footer"
+import { GoogleMap, useLoadScript, Marker, InfoWindow, Polyline } from '@react-google-maps/api'
+import { v4 as uuidv4 } from 'uuid'
+import mapStyles from "./mapStyles"
 
 export default function Submission() {
 
   // states stuff
-  const [libraries] = useState(['places']);
+  const [libraries] = useState(['places'])
   const [confirmedMarkers, setConfirmedMarkers] = useState([])
   const [unconfirmedMarker, setUnconfirmedMarker] = useState(undefined)
   const [selected, setSelected] = useState(null)
@@ -53,7 +53,6 @@ export default function Submission() {
     const confirmedMarkersArr = confirmedMarkers
     if (unconfirmedMarker) {
       if (placementIdx === confirmedMarkersArr.length) {
-        console.log("got here 1")
         confirmedMarkersArr.push([{
           lat: unconfirmedMarker.lat,
           lng: unconfirmedMarker.lng,
@@ -61,7 +60,6 @@ export default function Submission() {
           confirmed: true,
         }])
       } else {
-        console.log("got here 2")
         if (confirmedMarkers[placementIdx].length < 2) {
           confirmedMarkersArr[placementIdx].push({
             lat: unconfirmedMarker.lat,
@@ -71,7 +69,6 @@ export default function Submission() {
           })
         }
         else {
-          console.log("got here 3")
           for (let i = 0; i < confirmedMarkersArr[placementIdx].length; i++) {
             if (confirmedMarkersArr[placementIdx][i] == null) {
               confirmedMarkersArr[placementIdx][i] = {
@@ -100,28 +97,58 @@ export default function Submission() {
   }
 
   function MarkerInfoWindow({ marker }) {
-    const removeConfirmedMarkerFromArr = () => {
-      let confirmedMarkersArr = confirmedMarkers
-      let index = confirmedMarkersArr.indexOf(marker);
-      if (index > -1) { // only splice array when item is found
-        confirmedMarkersArr.splice(index, 1); // 2nd parameter means remove one item only
+    const removeConfirmedMarker = () => {
+
+      const confirmedMarkersArr = confirmedMarkers
+      for (let i = 0; i < confirmedMarkersArr.length; i++) {
+        let index = confirmedMarkersArr[i].indexOf(marker)
+        console.log("stuff")
+        if (index > -1) {
+          console.log(index)
+          confirmedMarkersArr[i].splice(index, 1, null)
+          setPlacementIdx(i)
+          break
+        }
       }
+      console.log(confirmedMarkersArr)
       setConfirmedMarkers(confirmedMarkersArr)
     }
-    const onEditClick = () => {
-      if (unconfirmedMarker) {
 
+    const removeConfirmedMarkerPair = () => {
+      const confirmedMarkersArr = confirmedMarkers
+      for (let i = 0; i < confirmedMarkersArr.length; i++) {
+        let index = confirmedMarkersArr[i].indexOf(marker)
+        if (index > -1) {
+          console.log(index)
+          confirmedMarkersArr.splice(i, 1)
+          break
+        }
       }
-      else {
-        removeConfirmedMarkerFromArr()
+      console.log(confirmedMarkersArr)
+      setConfirmedMarkers(confirmedMarkersArr)
+      if (confirmedMarkersArr.at(-1).length < 2) {
+        setPlacementIdx(confirmedMarkers.length - 1)
+      } else {
+        setPlacementIdx(confirmedMarkers.length)
+      }
+    }
+
+    const onEditClick = () => {
+      if (placementIdx == confirmedMarkers.length && !unconfirmedMarker) {
+        removeConfirmedMarker()
         setUnconfirmedMarker(marker)
         setSelected(null)
+      }
+      else {
+        // show error message
       }
     }
 
     const onRemoveClick = () => {
-      removeConfirmedMarkerFromArr()
-      setSelected(null)
+      if (placementIdx == confirmedMarkers.length && !unconfirmedMarker) {
+        removeConfirmedMarkerPair()
+        setSelected(null)
+      }
     }
 
     if (marker.confirmed) {
@@ -164,20 +191,34 @@ export default function Submission() {
           >
             {confirmedMarkers.map((markerTuple) => {
               return (markerTuple.map((marker) => {
-                console.log(marker)
                 return (
-                  <Marker
-                    key={marker.uuid}
-                    position={{ lat: marker.lat, lng: marker.lng }}
-                    // onClick={} show info about marker
-                    onRightClick={() => {
-                      setSelected(marker)
-                    }}
-                    animation={2}
-                    label={"10"}
-                  />
+                  marker ? (
+                    <Marker
+                      key={marker.uuid}
+                      position={{ lat: marker.lat, lng: marker.lng }}
+                      // onClick={} show info about marker
+                      onRightClick={() => {
+                        setSelected(marker)
+                      }}
+                      animation={2}
+                    />
+                  ) : null
                 )
               }))
+            })}
+
+            {confirmedMarkers.map((markerTuple) => {
+              const path = []
+              for (let i = 0; i < markerTuple.length; i++) {
+                if (!markerTuple[i])
+                  return null
+                path.push({ lat: markerTuple[i].lat, lng: markerTuple[i].lng })
+              }
+              return (
+                <Polyline
+                  path={path}
+                />
+              )
             })}
 
             {unconfirmedMarker ? (<Marker
