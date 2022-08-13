@@ -9,7 +9,7 @@ export default function Navbar() {
     <div className='nav-main'>
       <nav className='nav-container'>
         <Link id='nav-home' className='nav-link' to="/">
-          <img height={45} width={45} src={logo} />
+          <img height={45} width={45} src={logo} alt="Logo"/>
           <b id='nav-home-words'>Transit Wishes</b>
         </Link>
         <div className='nav-words'>

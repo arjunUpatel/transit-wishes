@@ -1,9 +1,8 @@
-import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api'
+import { GoogleMap, useLoadScript } from '@react-google-maps/api'
 import Navbar from './Navbar';
 import React from 'react';
 import Footer from './Footer';
 import './Map.css'
-import './.env'
 
 export default function Map() {
   const { isLoaded } = useLoadScript({
