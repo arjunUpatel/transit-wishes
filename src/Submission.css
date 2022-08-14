@@ -1,23 +1,53 @@
-.submission-container {
-  max-width: 1260px;
-  display: flex;
-  flex-direction: column;
-  margin: auto;
-  padding-left: 20px;
-  padding-right: 20px;
+.submission-map-container {
+  width: 100%;
+  min-height: 90vh;
 }
 
-.submission-subheading {
-  padding-top: 30px;
+.submission-search {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-.submission-para {
-  padding-top: 10px;
+.submission-input {
+  border: 5px solid;
+  font-weight: 700;
+  line-height: 1.5;
+  outline: none;
+  padding: 1rem 1.2rem;
+  width: 30rem;
 }
 
-.submission-toast-area {
-  position: fixed;
-  bottom: 100px;
-  left: auto;
-  right: auto;
+.submission-dropdown {
+  border: 5px solid;
+  border-top-style: solid;
+  border-top-width: 5px;
+  border-top: none;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0;
+  position: absolute;
+  text-align: left;
+  width: 30rem;
+}
+
+.submission-list {
+  cursor: pointer;
+  padding: 1rem 1.2rem;
+  width: 30rem;
+  color: black;
+  background-color: white;
+  overflow-x: wrap;
+}
+
+.submission-list:hover {
+  color: white;
+  background-color: black;
+}
+
+.submission-credit {
+  padding: 1rem 1.2rem;
+  text-align: right;
 }
