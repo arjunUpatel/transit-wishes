@@ -3,7 +3,8 @@ import React, { useCallback, useRef, useState } from 'react'
 import './Submission.css'
 import { GoogleMap, useLoadScript, Marker, InfoWindow, Polyline } from '@react-google-maps/api'
 import mapStyles from "./mapStyles"
-import usePlacesAutocomplete, { getGeocode, getLatLng, } from "use-places-autocomplete"
+import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete"
+import powered_by_google from "./images/powered-by-google-on-white.png"
 
 export default function Submission() {
 
@@ -20,6 +21,7 @@ export default function Submission() {
     disableDefaultUI: true,
     styles: mapStyles,
     disableAutoPan: true,
+    clickableIcons: false,
   }
   const mapRef = useRef()
   const { isLoaded, loadError } = useLoadScript({
@@ -28,20 +30,28 @@ export default function Submission() {
   })
   const onMapLoad = useCallback((map) => {
     mapRef.current = map
+    panTo(center)
+  }, [])
+
+  const panTo = useCallback(({ lat, lng, zoom }) => {
+    mapRef.current.panTo({ lat, lng })
+    mapRef.current.setZoom(18)
   }, [])
 
   // marker stuff
   const onMapClick = (event) => {
+    const lat = event.latLng.lat()
+    const lng = event.latLng.lng()
     if (unconfirmedMarker) {
       setUnconfirmedMarker({
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng(),
+        lat: lat,
+        lng: lng,
         confirmed: unconfirmedMarker.confirmed,
       })
     } else {
       setUnconfirmedMarker({
-        lat: event.latLng.lat(),
-        lng: event.latLng.lng(),
+        lat: lat,
+        lng: lng,
         confirmed: false,
       })
     }
@@ -102,26 +112,27 @@ export default function Submission() {
     const handleInput = (e) => {
       // Update the keyword of the input element
       setValue(e.target.value);
-    };
+    }
 
     const handleSelect = ({ description }) => () => {
       // When user selects a place, we can replace the keyword without request data from API
       // by setting the second parameter to "false"
-      setValue(description, false);
-      clearSuggestions();
+      setValue(description, false)
+      clearSuggestions()
 
       // Get latitude and longitude via utility functions
       getGeocode({ address: description }).then((results) => {
-        const { lat, lng } = getLatLng(results[0]);
-        console.log("📍 Coordinates: ", { lat, lng });
-      });
-    };
+        const { lat, lng } = getLatLng(results[0])
+        console.log("📍 Coordinates: ", { lat, lng })
+        panTo({ lat, lng })
+      })
+    }
 
     const renderSuggestions = () => data.map((suggestion) => {
       const {
         place_id,
         structured_formatting: { main_text, secondary_text },
-      } = suggestion;
+      } = suggestion
 
       return (
         <>
@@ -129,8 +140,8 @@ export default function Submission() {
             <strong>{main_text}</strong> <small>{secondary_text}</small>
           </li>
         </>
-      );
-    });
+      )
+    })
 
     return (
       <div className="submission-search">
@@ -145,7 +156,7 @@ export default function Submission() {
         {status === "OK" && <ul className="submission-dropdown">
           {renderSuggestions()}
           <li className="submission-credit">
-            <img src="https://developers.google.com/maps/documentation/images/powered_by_google_on_white.png" alt="Powered by Google">
+            <img src={powered_by_google} alt="Powered by Google">
             </img>
           </li>
         </ul>}
@@ -223,7 +234,6 @@ export default function Submission() {
       <GoogleMap
         id="google-map"
         zoom={8.2}
-        center={center}
         mapContainerClassName='submission-map-container'
         options={options}
         onClick={onMapClick}
@@ -256,6 +266,7 @@ export default function Submission() {
           return (
             <Polyline
               path={path}
+              options={{ clickable: false }}
             />
           )
         })}
