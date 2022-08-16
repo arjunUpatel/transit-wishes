@@ -30,13 +30,17 @@ export default function Submission() {
   })
   const onMapLoad = useCallback((map) => {
     mapRef.current = map
-    panTo(center)
+    panTo(center, 18)
   }, [])
 
-  const panTo = useCallback(({ lat, lng, zoom }) => {
+  const panTo = useCallback(({ lat, lng }, zoom) => {
     mapRef.current.panTo({ lat, lng })
-    mapRef.current.setZoom(18)
+    mapRef.current.setZoom(zoom)
   }, [])
+
+  const calculateZoom = () => {
+
+  }
 
   // marker stuff
   const onMapClick = (event) => {
@@ -123,8 +127,7 @@ export default function Submission() {
       // Get latitude and longitude via utility functions
       getGeocode({ address: description }).then((results) => {
         const { lat, lng } = getLatLng(results[0])
-        console.log("📍 Coordinates: ", { lat, lng })
-        panTo({ lat, lng })
+        panTo({ lat, lng }, calculateZoom())
       })
     }
 
@@ -133,13 +136,10 @@ export default function Submission() {
         place_id,
         structured_formatting: { main_text, secondary_text },
       } = suggestion
-
       return (
-        <>
-          <li className="submission-list" key={place_id} onClick={handleSelect(suggestion)}>
-            <strong>{main_text}</strong> <small>{secondary_text}</small>
-          </li>
-        </>
+        <li className="submission-list" key={place_id} onClick={handleSelect(suggestion)}>
+          <strong>{main_text}</strong> <small>{secondary_text}</small>
+        </li>
       )
     })
 
@@ -231,62 +231,70 @@ export default function Submission() {
   return (
     <>
       <Navbar></Navbar>
-      <GoogleMap
-        id="google-map"
-        zoom={8.2}
-        mapContainerClassName='submission-map-container'
-        options={options}
-        onClick={onMapClick}
-        onLoad={onMapLoad}
-      >
-        {confirmedMarkers.map((markerTuple) => {
-          return (markerTuple.map((marker) => {
-            return (
-              marker ? (
-                <Marker
-                  position={{ lat: marker.lat, lng: marker.lng }}
-                  // onClick={} show info about marker
-                  onRightClick={() => {
-                    setSelected(marker)
-                  }}
-                  animation={2}
-                />
-              ) : null
-            )
-          }))
-        })}
-
-        {confirmedMarkers.map((markerTuple) => {
-          const path = []
-          for (let i = 0; i < markerTuple.length; i++) {
-            if (!markerTuple[i])
-              return null
-            path.push({ lat: markerTuple[i].lat, lng: markerTuple[i].lng })
-          }
-          return (
-            <Polyline
-              path={path}
-              options={{ clickable: false }}
-            />
-          )
-        })}
-
-        {unconfirmedMarker ? (<Marker
-          position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
-          animation={1}
-          // onClick={} show info about the marker if you decide to do so
-          onDblClick={onUnconfirmedMarkerDblClick}
-        />) : null}
-
-        {selected ? (<InfoWindow position={{ lat: selected.lat, lng: selected.lng }}
-          options={{ pixelOffset: new window.google.maps.Size(0, -30) }}
-          onCloseClick={() => {
-            setSelected(null)
-          }}
+        <GoogleMap
+          id="google-map"
+          zoom={8.2}
+          mapContainerClassName='submission-map-container'
+          options={options}
+          onClick={onMapClick}
+          onLoad={onMapLoad}
         >
-          <MarkerInfoWindow marker={selected} />
-        </InfoWindow>) : null}
-      </GoogleMap>
+          {confirmedMarkers.map((markerTuple) => {
+            return (markerTuple.map((marker) => {
+              return (
+                marker ? (
+                  <Marker
+                    position={{ lat: marker.lat, lng: marker.lng }}
+                    // onClick={} show info about marker
+                    onRightClick={() => {
+                      setSelected(marker)
+                    }}
+                    animation={2}
+                  />
+                ) : null
+              )
+            }))
+          })}
+
+          {confirmedMarkers.map((markerTuple) => {
+            const path = []
+            for (let i = 0; i < markerTuple.length; i++) {
+              if (!markerTuple[i])
+                return null
+              path.push({ lat: markerTuple[i].lat, lng: markerTuple[i].lng })
+            }
+            const lineSymbol = { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW }
+            return (
+              <Polyline
+                path={path}
+                options={{
+                  clickable: false,
+                  icons: [{
+                    icon: lineSymbol,
+                    offset: "50%",
+                  }],
+                  geodesic: true
+                }}
+              />
+            )
+          })}
+
+          {unconfirmedMarker ? (<Marker
+            position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
+            animation={1}
+            // onClick={} show info about the marker if you decide to do so
+            onDblClick={onUnconfirmedMarkerDblClick}
+          />) : null}
+
+          {selected ? (<InfoWindow position={{ lat: selected.lat, lng: selected.lng }}
+            options={{ pixelOffset: new window.google.maps.Size(0, -30) }}
+            onCloseClick={() => {
+              setSelected(null)
+            }}
+          >
+            <MarkerInfoWindow marker={selected} />
+          </InfoWindow>) : null}
+        </GoogleMap>
       <Search />
     </>
   )
