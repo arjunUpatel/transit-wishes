@@ -1,10 +1,13 @@
 import Navbar from "./Navbar"
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect, useReducer } from 'react'
 import './Submission.css'
 import { GoogleMap, useLoadScript, Marker, InfoWindow, Polyline } from '@react-google-maps/api'
 import mapStyles from "./mapStyles"
 import usePlacesAutocomplete, { getGeocode, getLatLng } from "use-places-autocomplete"
 import powered_by_google from "./images/powered-by-google-on-white.png"
+import Form from 'react-bootstrap/Form'
+import InputGroup from 'react-bootstrap/InputGroup'
+import ListGroup from "react-bootstrap/ListGroup"
 
 export default function Submission() {
 
@@ -14,6 +17,34 @@ export default function Submission() {
   const [unconfirmedMarker, setUnconfirmedMarker] = useState(undefined)
   const [selected, setSelected] = useState(null)
   const [placementIdx, setPlacementIdx] = useState(0)
+
+  // key event handling
+  const useKeyPress = (targetKey) => {
+    const [keyPressed, setKeyPressed] = useState(false)
+    useEffect(() => {
+      const downHandler = ({ key }) => {
+        if (key === targetKey) {
+          setKeyPressed(true)
+        }
+      }
+
+      const upHandler = ({ key }) => {
+        if (key === targetKey) {
+          setKeyPressed(false)
+        }
+      }
+
+      window.addEventListener('keydown', downHandler)
+      window.addEventListener('keyup', upHandler)
+
+      return () => {
+        window.removeEventListener('keydown', downHandler)
+        window.removeEventListener('keyup', upHandler)
+      }
+    }, [targetKey])
+
+    return keyPressed
+  }
 
   // google maps setup stuff
   const center = { lat: 40.0583, lng: -74.4057 }
@@ -86,7 +117,7 @@ export default function Submission() {
                 lng: unconfirmedMarker.lng,
                 confirmed: true,
               }
-              break;
+              break
             }
           }
         }
@@ -97,6 +128,8 @@ export default function Submission() {
       setSelected(null)
     }
   }
+
+  const initialState = { selectedIndex: -1 };
 
   function Search() {
     const {
@@ -113,16 +146,61 @@ export default function Submission() {
       debounce: 300,
     })
 
-    const handleInput = (e) => {
-      // Update the keyword of the input element
-      setValue(e.target.value);
+    const searchReducer = (state, action) => {
+      switch (action.type) {
+        case 'clear':
+          return {
+            selectedIndex:
+              -1
+          }
+        case 'hover':
+          return {
+            selectedIndex:
+              action.index
+          }
+        case 'arrowUp':
+          return {
+            selectedIndex:
+              state.selectedIndex !== 0 ? state.selectedIndex - 1 : data.length - 1,
+          }
+        case 'arrowDown':
+          return {
+            selectedIndex:
+              state.selectedIndex !== data.length - 1 ? state.selectedIndex + 1 : 0,
+          }
+        case 'select':
+          return { selectedIndex: -1 }
+        default:
+          throw new Error()
+      }
     }
 
-    const handleSelect = ({ description }) => () => {
+    const arrowUpPressed = useKeyPress('ArrowUp')
+    const arrowDownPressed = useKeyPress('ArrowDown')
+    const [state, dispatch] = useReducer(searchReducer, initialState);
+
+    useEffect(() => {
+      if (arrowUpPressed) {
+        dispatch({ type: 'arrowUp' });
+      }
+    }, [arrowUpPressed])
+
+    useEffect(() => {
+      if (arrowDownPressed) {
+        dispatch({ type: 'arrowDown' });
+      }
+    }, [arrowDownPressed])
+
+    const clrSuggestions = () => {
+      dispatch({ type: 'clear' })
+      clearSuggestions()
+    }
+
+    const handleSelect = ({ description }) => {
       // When user selects a place, we can replace the keyword without request data from API
       // by setting the second parameter to "false"
       setValue(description, false)
-      clearSuggestions()
+      clrSuggestions()
 
       // Get latitude and longitude via utility functions
       getGeocode({ address: description }).then((results) => {
@@ -131,35 +209,60 @@ export default function Submission() {
       })
     }
 
-    const renderSuggestions = () => data.map((suggestion) => {
+    const handleInput = (e) => {
+      // Update the keyword of the input element
+      dispatch({ type: 'clear' })
+      setValue(e.target.value)
+    }
+
+    const renderSuggestions = () => data.map((suggestion, i) => {
       const {
         place_id,
         structured_formatting: { main_text, secondary_text },
       } = suggestion
       return (
-        <li className="submission-list" key={place_id} onClick={handleSelect(suggestion)}>
+        <ListGroup.Item
+          id={'submission-item'}
+          className='submission-item'
+          as='li'
+          key={place_id}
+          action
+          onClick={() => {
+            dispatch({ type: 'select' })
+            handleSelect(suggestion)
+          }}
+          onMouseOver={() => {
+            dispatch({ type: 'hover', index: i })
+          }}
+          style={{
+            color: i === state.selectedIndex ? 'white' : 'black',
+            backgroundColor: i === state.selectedIndex ? '#0d6efd' : 'white'
+          }}
+        >
           <strong>{main_text}</strong> <small>{secondary_text}</small>
-        </li>
+        </ListGroup.Item >
       )
     })
 
     return (
       <div className="submission-search">
-        <input
-          className="submission-input"
-          type="search"
-          placeholder="Search"
-          value={value}
-          onChange={handleInput}
-          disabled={!ready}
-        />
-        {status === "OK" && <ul className="submission-dropdown">
+        <InputGroup>
+          <Form.Control
+            id='submission-input'
+            type="search"
+            placeholder="Search"
+            value={value}
+            onChange={handleInput}
+            disabled={!ready}
+          />
+        </InputGroup>
+        {status === "OK" && <ListGroup as='ul'>
           {renderSuggestions()}
-          <li className="submission-credit">
+          <ListGroup.Item as='li'>
             <img src={powered_by_google} alt="Powered by Google">
             </img>
-          </li>
-        </ul>}
+          </ListGroup.Item>
+        </ListGroup>}
       </div>
     )
   }
@@ -230,71 +333,73 @@ export default function Submission() {
     return <div>Loading...</div>
   return (
     <>
-      <Navbar></Navbar>
-        <GoogleMap
-          id="google-map"
-          zoom={8.2}
-          mapContainerClassName='submission-map-container'
-          options={options}
-          onClick={onMapClick}
-          onLoad={onMapLoad}
-        >
-          {confirmedMarkers.map((markerTuple) => {
-            return (markerTuple.map((marker) => {
-              return (
-                marker ? (
-                  <Marker
-                    position={{ lat: marker.lat, lng: marker.lng }}
-                    // onClick={} show info about marker
-                    onRightClick={() => {
-                      setSelected(marker)
-                    }}
-                    animation={2}
-                  />
-                ) : null
-              )
-            }))
-          })}
-
-          {confirmedMarkers.map((markerTuple) => {
-            const path = []
-            for (let i = 0; i < markerTuple.length; i++) {
-              if (!markerTuple[i])
-                return null
-              path.push({ lat: markerTuple[i].lat, lng: markerTuple[i].lng })
-            }
-            const lineSymbol = { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW }
+      <div className="submission-navbar">
+        <Navbar></Navbar>
+      </div>
+      <GoogleMap
+        id="google-map"
+        zoom={8.2}
+        mapContainerClassName='submission-map-container'
+        options={options}
+        onClick={onMapClick}
+        onLoad={onMapLoad}
+      >
+        {confirmedMarkers.map((markerTuple) => {
+          return (markerTuple.map((marker) => {
             return (
-              <Polyline
-                path={path}
-                options={{
-                  clickable: false,
-                  icons: [{
-                    icon: lineSymbol,
-                    offset: "50%",
-                  }],
-                  geodesic: true
-                }}
-              />
+              marker ? (
+                <Marker
+                  position={{ lat: marker.lat, lng: marker.lng }}
+                  // onClick={} show info about marker
+                  onRightClick={() => {
+                    setSelected(marker)
+                  }}
+                  animation={2}
+                />
+              ) : null
             )
-          })}
+          }))
+        })}
 
-          {unconfirmedMarker ? (<Marker
-            position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
-            animation={1}
-            // onClick={} show info about the marker if you decide to do so
-            onDblClick={onUnconfirmedMarkerDblClick}
-          />) : null}
+        {confirmedMarkers.map((markerTuple) => {
+          const path = []
+          for (let i = 0; i < markerTuple.length; i++) {
+            if (!markerTuple[i])
+              return null
+            path.push({ lat: markerTuple[i].lat, lng: markerTuple[i].lng })
+          }
+          const lineSymbol = { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW }
+          return (
+            <Polyline
+              path={path}
+              options={{
+                clickable: false,
+                icons: [{
+                  icon: lineSymbol,
+                  offset: "50%",
+                }],
+                geodesic: true
+              }}
+            />
+          )
+        })}
 
-          {selected ? (<InfoWindow position={{ lat: selected.lat, lng: selected.lng }}
-            options={{ pixelOffset: new window.google.maps.Size(0, -30) }}
-            onCloseClick={() => {
-              setSelected(null)
-            }}
-          >
-            <MarkerInfoWindow marker={selected} />
-          </InfoWindow>) : null}
-        </GoogleMap>
+        {unconfirmedMarker ? (<Marker
+          position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
+          animation={1}
+          // onClick={} show info about the marker if you decide to do so
+          onDblClick={onUnconfirmedMarkerDblClick}
+        />) : null}
+
+        {selected ? (<InfoWindow position={{ lat: selected.lat, lng: selected.lng }}
+          options={{ pixelOffset: new window.google.maps.Size(0, -30) }}
+          onCloseClick={() => {
+            setSelected(null)
+          }}
+        >
+          <MarkerInfoWindow marker={selected} />
+        </InfoWindow>) : null}
+      </GoogleMap>
       <Search />
     </>
   )
