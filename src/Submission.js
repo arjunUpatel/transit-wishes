@@ -20,26 +20,34 @@ export default function Submission() {
 
   // key event handling
   const useKeyPress = (targetKey) => {
-    const [keyPressed, setKeyPressed] = useState(false)
+    const [keyPressed, setKeyPressed] = useState(0)
     useEffect(() => {
       const downHandler = ({ key }) => {
         if (key === targetKey) {
-          setKeyPressed(true)
+          setKeyPressed(0)
         }
       }
 
       const upHandler = ({ key }) => {
         if (key === targetKey) {
-          setKeyPressed(false)
+          setKeyPressed(1)
+        }
+      }
+
+      const enterHandler = ({ key }) => {
+        if (key === targetKey) {
+          setKeyPressed(2)
         }
       }
 
       window.addEventListener('keydown', downHandler)
       window.addEventListener('keyup', upHandler)
+      window.addEventListener('enter', enterHandler)
 
       return () => {
         window.removeEventListener('keydown', downHandler)
         window.removeEventListener('keyup', upHandler)
+        window.removeEventListener('enter', enterHandler)
       }
     }, [targetKey])
 
@@ -70,7 +78,7 @@ export default function Submission() {
   }, [])
 
   const calculateZoom = () => {
-
+    return 10
   }
 
   // marker stuff
@@ -168,8 +176,6 @@ export default function Submission() {
             selectedIndex:
               state.selectedIndex !== data.length - 1 ? state.selectedIndex + 1 : 0,
           }
-        case 'select':
-          return { selectedIndex: -1 }
         default:
           throw new Error()
       }
@@ -177,30 +183,15 @@ export default function Submission() {
 
     const arrowUpPressed = useKeyPress('ArrowUp')
     const arrowDownPressed = useKeyPress('ArrowDown')
+    const enterPressed = useKeyPress('Enter')
     const [state, dispatch] = useReducer(searchReducer, initialState);
-
-    useEffect(() => {
-      if (arrowUpPressed) {
-        dispatch({ type: 'arrowUp' });
-      }
-    }, [arrowUpPressed])
-
-    useEffect(() => {
-      if (arrowDownPressed) {
-        dispatch({ type: 'arrowDown' });
-      }
-    }, [arrowDownPressed])
-
-    const clrSuggestions = () => {
-      dispatch({ type: 'clear' })
-      clearSuggestions()
-    }
 
     const handleSelect = ({ description }) => {
       // When user selects a place, we can replace the keyword without request data from API
       // by setting the second parameter to "false"
       setValue(description, false)
-      clrSuggestions()
+      dispatch({ type: 'clear' })
+      clearSuggestions()
 
       // Get latitude and longitude via utility functions
       getGeocode({ address: description }).then((results) => {
@@ -215,6 +206,26 @@ export default function Submission() {
       setValue(e.target.value)
     }
 
+    useEffect(() => {
+      if (arrowUpPressed) {
+        dispatch({ type: 'arrowUp' })
+      }
+    }, [arrowUpPressed])
+
+    useEffect(() => {
+      if (arrowDownPressed) {
+        dispatch({ type: 'arrowDown' })
+      }
+    }, [arrowDownPressed])
+
+    useEffect(() => {
+      if (enterPressed && state.selectedIndex != -1) {
+        handleSelect(data[state.selectedIndex])
+        console.log(data[state.selectedIndex])
+        dispatch({ type: 'clear' })
+      }
+    }, [enterPressed])
+
     const renderSuggestions = () => data.map((suggestion, i) => {
       const {
         place_id,
@@ -228,8 +239,8 @@ export default function Submission() {
           key={place_id}
           action
           onClick={() => {
-            dispatch({ type: 'select' })
             handleSelect(suggestion)
+            dispatch({ type: 'clear' })
           }}
           onMouseOver={() => {
             dispatch({ type: 'hover', index: i })
@@ -248,7 +259,6 @@ export default function Submission() {
       <div className="submission-search">
         <InputGroup>
           <Form.Control
-            id='submission-input'
             type="search"
             placeholder="Search"
             value={value}
