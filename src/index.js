@@ -18,7 +18,7 @@ root.render(
       <Route path="/" element={<App />} />
       <Route path="about" element={<About />} />
       <Route path="the-map" element={<Map />} />
-      <Route path='make-a-wish' element={<Submission />}></Route>
+      <Route path='contribute' element={<Submission />}></Route>
       <Route
         path="*"
         element={

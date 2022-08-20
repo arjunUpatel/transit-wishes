@@ -16,43 +16,6 @@ html {
   background-color: #312C38;
 }
 
-h1 {
-  font-size: 72px;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-h2 {
-  font-size: 30px;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-p {
-  font-size: 19px;
-  max-width: 840px;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-span {
-  font-size: 20px;
-  align-items: center;
-}
-
-a {
-  text-align: center;
-}
-
-footer {
-  display: flex;
-  flex-direction: column;
-  color: white;
-  padding-top: 25px;
-  padding-bottom: 25px;
-  align-items: center;
-}
-
 .main {
   background-color: #F7EFE7;
   padding-bottom: 20px;

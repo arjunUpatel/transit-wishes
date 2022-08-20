@@ -7,21 +7,15 @@ export default function Footer() {
   return (
     <footer>
       <div className='footer-top'>
-        <div className='footer-stuff'>
-          <b>Contribute and help improve this website: &ensp;</b>
-          <a href='https://github.com/arjunUpatel/transit-wishes' target='_blank' rel="noreferrer">
-            <img height={25} width={25} src={githubLogo} alt="Github"/>
-          </a>
-        </div>
-        <div className='footer-stuff'>
-          <b>Have success stories or suggestions? Email the developer: &ensp;</b>
-          <a href='mailto:gib.ansr@gmail.com'>
-            <img height={25} width={25} src={emailLogo} alt='Email' />
-          </a>
-        </div>
+        <a className='footer-img' href='https://github.com/arjunUpatel/transit-wishes' target='_blank' rel="noreferrer">
+          <img height={50} width={50} src={githubLogo} alt="Github" />
+        </a>
+        <a className='footer-img' href='mailto:gib.ansr@gmail.com'>
+          <img height={50} width={50} src={emailLogo} alt='Email' />
+        </a>
       </div>
       <div className='footer-bottom'>
-        <b>© {new Date().getFullYear()} Arjun Patel</b>
+        © {new Date().getFullYear()} Arjun Patel
       </div>
     </footer>
   )

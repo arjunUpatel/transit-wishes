@@ -1,4 +1,4 @@
-import Navbar from "./Navbar";
+import Header from "./Header";
 import React from 'react';
 import './About.css'
 import Footer from "./Footer";
@@ -6,7 +6,7 @@ import Footer from "./Footer";
 export default function About() {
   return (
     <>
-      <Navbar />
+      <Header />
       <div className="main">
         <div className='about-container'>
           <h1>About</h1>

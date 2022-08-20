@@ -1,0 +1,16 @@
+#nav-link:hover {
+    color: #E73C37;
+    transition: ease .375s;
+}
+
+#nav-link {
+    color: white;
+}
+
+#nav-main {
+    background-color: #312C38;
+}
+
+#nav-brand-text {
+    padding-left: 5px;
+}

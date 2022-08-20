@@ -1,5 +1,5 @@
 import { GoogleMap, useLoadScript } from '@react-google-maps/api'
-import Navbar from './Navbar';
+import Header from './Header';
 import React from 'react';
 import Footer from './Footer';
 import './Map.css'
@@ -12,7 +12,7 @@ export default function Map() {
   if (!isLoaded) return <div>Loading...</div>
   return (
     <div>
-      <Navbar />
+      <Header />
       <div className='main'>
         <div className='map-content'>
           <div className='map-text'>

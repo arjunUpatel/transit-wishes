@@ -1,14 +1,22 @@
+footer {
+  background-color: #312C38;
+}
+
+.footer-img {
+  padding-right: 10px;
+}
+
 .footer-top {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
+  padding-top: 15px;
 }
 
 .footer-bottom {
-  padding-top: 20px;
-}
-
-.footer-stuff {
   display: flex;
-  align-items: center;
-  padding-top: 5px;
+  padding-top: 20px;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
 }

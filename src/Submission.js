@@ -1,4 +1,4 @@
-import Navbar from "./Navbar"
+import Header from "./Header"
 import React, { useCallback, useRef, useState, useEffect, useReducer } from 'react'
 import './Submission.css'
 import { GoogleMap, useLoadScript, Marker, InfoWindow, Polyline } from '@react-google-maps/api'
@@ -344,7 +344,7 @@ export default function Submission() {
   return (
     <>
       <div className="submission-navbar">
-        <Navbar></Navbar>
+        <Header />
       </div>
       <GoogleMap
         id="google-map"
