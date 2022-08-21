@@ -1,6 +1,12 @@
 .submission-map-container {
-  width: 100%;
-  min-height: 90vh;
+  width: 100vw;
+  height: 100vh;
+}
+
+.submission-navbar {
+  z-index: 2;
+  position: absolute;
+  width: 100vw;
 }
 
 .submission-search {
@@ -8,10 +14,17 @@
   top: 80px;
   left: 50%;
   transform: translateX(-50%);
-  width: 425px
+  width: 425px;
 }
 
 .submission-item {
-  z-index: 3;
+  z-index: 2;
   cursor: pointer;
+}
+
+.submission-infobox {
+  position: absolute;
+  z-index: 2;
+  top: 80px;
+  left: 1%
 }

@@ -8,6 +8,8 @@ import powered_by_google from "./images/powered-by-google-on-white.png"
 import Form from 'react-bootstrap/Form'
 import InputGroup from 'react-bootstrap/InputGroup'
 import ListGroup from "react-bootstrap/ListGroup"
+import angle_right from './images/angle-right.png'
+import Card from 'react-bootstrap/Card'
 
 export default function Submission() {
 
@@ -55,7 +57,7 @@ export default function Submission() {
   }
 
   // google maps setup stuff
-  const center = { lat: 40.0583, lng: -74.4057 }
+  const center = { lat: 40, lng: -99 }
   const options = {
     disableDefaultUI: true,
     styles: mapStyles,
@@ -69,7 +71,7 @@ export default function Submission() {
   })
   const onMapLoad = useCallback((map) => {
     mapRef.current = map
-    panTo(center, 18)
+    panTo(center, 4.5)
   }, [])
 
   const panTo = useCallback(({ lat, lng }, zoom) => {
@@ -77,9 +79,6 @@ export default function Submission() {
     mapRef.current.setZoom(zoom)
   }, [])
 
-  const calculateZoom = () => {
-    return 10
-  }
 
   // marker stuff
   const onMapClick = (event) => {
@@ -148,10 +147,8 @@ export default function Submission() {
       clearSuggestions,
     } = usePlacesAutocomplete({
       requestOptions: {
-        location: { lat: () => 40.0583, lng: () => -74.4057 },
-        radius: 200 * 1000,
+        componentRestrictions: { country: "us" },
       },
-      debounce: 300,
     })
 
     const searchReducer = (state, action) => {
@@ -196,7 +193,7 @@ export default function Submission() {
       // Get latitude and longitude via utility functions
       getGeocode({ address: description }).then((results) => {
         const { lat, lng } = getLatLng(results[0])
-        panTo({ lat, lng }, calculateZoom())
+        panTo({ lat, lng }, 15)
       })
     }
 
@@ -219,7 +216,7 @@ export default function Submission() {
     }, [arrowDownPressed])
 
     useEffect(() => {
-      if (enterPressed && state.selectedIndex != -1) {
+      if (enterPressed && state.selectedIndex !== -1) {
         handleSelect(data[state.selectedIndex])
         console.log(data[state.selectedIndex])
         dispatch({ type: 'clear' })
@@ -230,7 +227,9 @@ export default function Submission() {
       const {
         place_id,
         structured_formatting: { main_text, secondary_text },
+
       } = suggestion
+      console.log(suggestion)
       return (
         <ListGroup.Item
           id={'submission-item'}
@@ -273,6 +272,32 @@ export default function Submission() {
             </img>
           </ListGroup.Item>
         </ListGroup>}
+      </div>
+    )
+  }
+
+  function InfoBox() {
+    const text = () => {
+      if (!unconfirmedMarker && placementIdx === confirmedMarkers.length) {
+        return "Click on the map to place an origin marker"
+      } else if (unconfirmedMarker && placementIdx === confirmedMarkers.length) {
+        return "Click on the map to change the location of the marker. Double click the bouncing marker to confirm its location"
+      } else if (!unconfirmedMarker && confirmedMarkers[placementIdx].length < 2) {
+        return "Click on the map to place the destination marker"
+      } else if (unconfirmedMarker && confirmedMarkers[placementIdx].length < 2) {
+        return "Click on the map to change the location of the marker. Double click the bouncing marker to confirm its location"
+      } else if (unconfirmedMarker && placementIdx !== confirmedMarkers.length) {
+        return "Click on the map to change the location of the marker.Double click the bouncing marker to confirm its location"
+      }
+      return ""
+    }
+    
+    return (
+      <div className='submission-infobox'>
+        <Card body>
+          <img width={25} height={25} src={angle_right} alt='Todo:' />
+          {text()}
+        </Card>
       </div>
     )
   }
@@ -346,9 +371,9 @@ export default function Submission() {
       <div className="submission-navbar">
         <Header />
       </div>
+      <InfoBox />
       <GoogleMap
         id="google-map"
-        zoom={8.2}
         mapContainerClassName='submission-map-container'
         options={options}
         onClick={onMapClick}
@@ -387,8 +412,7 @@ export default function Submission() {
                 icons: [{
                   icon: lineSymbol,
                   offset: "50%",
-                }],
-                geodesic: true
+                }]
               }}
             />
           )
