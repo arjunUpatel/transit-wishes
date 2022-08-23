@@ -1,10 +1,10 @@
+#nav-link {
+    color: white;
+}
+
 #nav-link:hover {
     color: #E73C37;
     transition: ease .375s;
-}
-
-#nav-link {
-    color: white;
 }
 
 #nav-main {

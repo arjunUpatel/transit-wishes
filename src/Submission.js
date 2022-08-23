@@ -10,6 +10,11 @@ import InputGroup from 'react-bootstrap/InputGroup'
 import ListGroup from "react-bootstrap/ListGroup"
 import angle_right from './images/angle-right.png'
 import Card from 'react-bootstrap/Card'
+import Toast from 'react-bootstrap/Toast'
+import Button from "react-bootstrap/Button"
+import ButtonGroup from "react-bootstrap/ButtonGroup"
+import magnifierLogo from "./images/magnifier.png"
+import Offcanvas from 'react-bootstrap/Offcanvas'
 
 export default function Submission() {
 
@@ -19,37 +24,31 @@ export default function Submission() {
   const [unconfirmedMarker, setUnconfirmedMarker] = useState(undefined)
   const [selected, setSelected] = useState(null)
   const [placementIdx, setPlacementIdx] = useState(0)
+  const [submitButtonState, setSubmitButtonState] = useState(true)
+  const [search, setSearch] = useState(false)
 
   // key event handling
   const useKeyPress = (targetKey) => {
-    const [keyPressed, setKeyPressed] = useState(0)
+    const [keyPressed, setKeyPressed] = useState(false)
     useEffect(() => {
       const downHandler = ({ key }) => {
         if (key === targetKey) {
-          setKeyPressed(0)
+          setKeyPressed(true)
         }
       }
 
       const upHandler = ({ key }) => {
         if (key === targetKey) {
-          setKeyPressed(1)
-        }
-      }
-
-      const enterHandler = ({ key }) => {
-        if (key === targetKey) {
-          setKeyPressed(2)
+          setKeyPressed(false)
         }
       }
 
       window.addEventListener('keydown', downHandler)
       window.addEventListener('keyup', upHandler)
-      window.addEventListener('enter', enterHandler)
 
       return () => {
         window.removeEventListener('keydown', downHandler)
         window.removeEventListener('keyup', upHandler)
-        window.removeEventListener('enter', enterHandler)
       }
     }, [targetKey])
 
@@ -88,13 +87,11 @@ export default function Submission() {
       setUnconfirmedMarker({
         lat: lat,
         lng: lng,
-        confirmed: unconfirmedMarker.confirmed,
       })
     } else {
       setUnconfirmedMarker({
         lat: lat,
         lng: lng,
-        confirmed: false,
       })
     }
   }
@@ -106,14 +103,12 @@ export default function Submission() {
         confirmedMarkersArr.push([{
           lat: unconfirmedMarker.lat,
           lng: unconfirmedMarker.lng,
-          confirmed: true,
         }])
       } else {
         if (confirmedMarkers[placementIdx].length < 2) {
           confirmedMarkersArr[placementIdx].push({
             lat: unconfirmedMarker.lat,
             lng: unconfirmedMarker.lng,
-            confirmed: true,
           })
         }
         else {
@@ -122,7 +117,6 @@ export default function Submission() {
               confirmedMarkersArr[placementIdx][i] = {
                 lat: unconfirmedMarker.lat,
                 lng: unconfirmedMarker.lng,
-                confirmed: true,
               }
               break
             }
@@ -135,146 +129,7 @@ export default function Submission() {
       setSelected(null)
     }
   }
-
   const initialState = { selectedIndex: -1 };
-
-  function Search() {
-    const {
-      ready,
-      value,
-      suggestions: { status, data },
-      setValue,
-      clearSuggestions,
-    } = usePlacesAutocomplete({
-      requestOptions: {
-        componentRestrictions: { country: "us" },
-      },
-    })
-
-    const searchReducer = (state, action) => {
-      switch (action.type) {
-        case 'clear':
-          return {
-            selectedIndex:
-              -1
-          }
-        case 'hover':
-          return {
-            selectedIndex:
-              action.index
-          }
-        case 'arrowUp':
-          return {
-            selectedIndex:
-              state.selectedIndex !== 0 ? state.selectedIndex - 1 : data.length - 1,
-          }
-        case 'arrowDown':
-          return {
-            selectedIndex:
-              state.selectedIndex !== data.length - 1 ? state.selectedIndex + 1 : 0,
-          }
-        default:
-          throw new Error()
-      }
-    }
-
-    const arrowUpPressed = useKeyPress('ArrowUp')
-    const arrowDownPressed = useKeyPress('ArrowDown')
-    const enterPressed = useKeyPress('Enter')
-    const [state, dispatch] = useReducer(searchReducer, initialState);
-
-    const handleSelect = ({ description }) => {
-      // When user selects a place, we can replace the keyword without request data from API
-      // by setting the second parameter to "false"
-      setValue(description, false)
-      dispatch({ type: 'clear' })
-      clearSuggestions()
-
-      // Get latitude and longitude via utility functions
-      getGeocode({ address: description }).then((results) => {
-        const { lat, lng } = getLatLng(results[0])
-        panTo({ lat, lng }, 15)
-      })
-    }
-
-    const handleInput = (e) => {
-      // Update the keyword of the input element
-      dispatch({ type: 'clear' })
-      setValue(e.target.value)
-    }
-
-    useEffect(() => {
-      if (arrowUpPressed) {
-        dispatch({ type: 'arrowUp' })
-      }
-    }, [arrowUpPressed])
-
-    useEffect(() => {
-      if (arrowDownPressed) {
-        dispatch({ type: 'arrowDown' })
-      }
-    }, [arrowDownPressed])
-
-    useEffect(() => {
-      if (enterPressed && state.selectedIndex !== -1) {
-        handleSelect(data[state.selectedIndex])
-        console.log(data[state.selectedIndex])
-        dispatch({ type: 'clear' })
-      }
-    }, [enterPressed])
-
-    const renderSuggestions = () => data.map((suggestion, i) => {
-      const {
-        place_id,
-        structured_formatting: { main_text, secondary_text },
-
-      } = suggestion
-      console.log(suggestion)
-      return (
-        <ListGroup.Item
-          id={'submission-item'}
-          className='submission-item'
-          as='li'
-          key={place_id}
-          action
-          onClick={() => {
-            handleSelect(suggestion)
-            dispatch({ type: 'clear' })
-          }}
-          onMouseOver={() => {
-            dispatch({ type: 'hover', index: i })
-          }}
-          style={{
-            color: i === state.selectedIndex ? 'white' : 'black',
-            backgroundColor: i === state.selectedIndex ? '#0d6efd' : 'white'
-          }}
-        >
-          <strong>{main_text}</strong> <small>{secondary_text}</small>
-        </ListGroup.Item >
-      )
-    })
-
-    return (
-      <div className="submission-search">
-        <InputGroup>
-          <Form.Control
-            type="search"
-            placeholder="Search"
-            value={value}
-            onChange={handleInput}
-            disabled={!ready}
-          />
-        </InputGroup>
-        {status === "OK" && <ListGroup as='ul'>
-          {renderSuggestions()}
-          <ListGroup.Item as='li'>
-            <img src={powered_by_google} alt="Powered by Google">
-            </img>
-          </ListGroup.Item>
-        </ListGroup>}
-      </div>
-    )
-  }
 
   function InfoBox() {
     const text = () => {
@@ -291,7 +146,7 @@ export default function Submission() {
       }
       return ""
     }
-    
+
     return (
       <div className='submission-infobox'>
         <Card body>
@@ -351,15 +206,178 @@ export default function Submission() {
       }
     }
 
-    if (marker.confirmed) {
+    if (marker != unconfirmedMarker && marker == selected) {
       return (
-        <div>
-          {/* // a marker is unconfirmed, when edit button is pressed, show pop up to confirm other marker */}
-          <button onClick={onEditClick}>Edit</button>
-          <button onClick={onRemoveClick}>Remove</button>
-        </div>
+        <ButtonGroup vertical size="sm">
+          <Button variant="outline-primary" onClick={onEditClick} tabIndex={-1}>Edit</Button>
+          <Button variant="outline-primary" onClick={onRemoveClick} tabIndex={-1}>Remove</Button>
+        </ButtonGroup>
       )
     }
+  }
+
+  function SubmitButton() {
+    if (!unconfirmedMarker && placementIdx === confirmedMarkers.length) {
+      setSubmitButtonState(false)
+    } else {
+      setSubmitButtonState(true)
+    }
+    return (
+      <div className="submit-button">
+        <Button id='submission-button' variant='success' disabled={submitButtonState}>Submit</Button>
+      </div>
+    )
+  }
+
+  function SearchOffcanvas() {
+    const {
+      ready,
+      value,
+      suggestions: { status, data },
+      setValue,
+      clearSuggestions,
+    } = usePlacesAutocomplete({
+      requestOptions: {
+        componentRestrictions: { country: "us" },
+      },
+      debounce: 400
+    })
+
+    const searchReducer = (state, action) => {
+      switch (action.type) {
+        case 'clear':
+          return {
+            selectedIndex:
+              -1
+          }
+        case 'hover':
+          return {
+            selectedIndex:
+              action.index
+          }
+        case 'arrowUp':
+          return {
+            selectedIndex:
+              state.selectedIndex !== 0 ? state.selectedIndex - 1 : data.length - 1,
+          }
+        case 'arrowDown':
+          return {
+            selectedIndex:
+              state.selectedIndex !== data.length - 1 ? state.selectedIndex + 1 : 0,
+          }
+        default:
+          throw new Error()
+      }
+    }
+
+    const arrowUpPressed = useKeyPress('ArrowUp')
+    const arrowDownPressed = useKeyPress('ArrowDown')
+    const enterPressed = useKeyPress('Enter')
+    const [state, dispatch] = useReducer(searchReducer, initialState);
+
+    const handleSelect = ({ description }) => {
+      // When user selects a place, we can replace the keyword without request data from API
+      // by setting the second parameter to "false"
+      setValue(description, false)
+      dispatch({ type: 'clear' })
+      clearSuggestions()
+      setSearch(false)
+
+      // Get latitude and longitude via utility functions
+      getGeocode({ address: description }).then((results) => {
+        const { lat, lng } = getLatLng(results[0])
+        panTo({ lat, lng }, 15)
+      })
+    }
+
+    const handleInput = (e) => {
+      // Update the keyword of the input element
+      dispatch({ type: 'clear' })
+      setValue(e.target.value)
+    }
+
+    useEffect(() => {
+      if (arrowUpPressed) {
+        dispatch({ type: 'arrowUp' })
+      }
+    }, [arrowUpPressed])
+
+    useEffect(() => {
+      if (arrowDownPressed) {
+        dispatch({ type: 'arrowDown' })
+      }
+    }, [arrowDownPressed])
+
+    useEffect(() => {
+      if (enterPressed && state.selectedIndex !== -1) {
+        handleSelect(data[state.selectedIndex])
+        dispatch({ type: 'clear' })
+      }
+    }, [enterPressed])
+
+    const renderSuggestions = () => data.map((suggestion, i) => {
+      const {
+        place_id,
+        structured_formatting: { main_text, secondary_text },
+      } = suggestion
+      return (
+        <ListGroup.Item
+          id='submission-item'
+          as='li'
+          key={place_id}
+          action
+          onClick={() => {
+            handleSelect(suggestion)
+            dispatch({ type: 'clear' })
+          }}
+          onMouseOver={() => {
+            dispatch({ type: 'hover', index: i })
+          }}
+          style={{
+            color: i === state.selectedIndex ? 'white' : 'black',
+            backgroundColor: i === state.selectedIndex ? '#0d6efd' : 'white'
+          }}
+        >
+          <strong>{main_text}</strong> <small>{secondary_text}</small>
+        </ListGroup.Item >
+      )
+    })
+
+    return (
+      <Offcanvas show={search} onHide={() => { setSearch(false) }} placement='end'>
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>Search</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <div className="submission-search">
+            <InputGroup>
+              <Form.Control
+                type="search"
+                placeholder="Search"
+                value={value}
+                onChange={handleInput}
+                disabled={!ready}
+              />
+            </InputGroup>
+            {status === "OK" && <ListGroup as='ul'>
+              {renderSuggestions()}
+              <ListGroup.Item as='li'>
+                <img src={powered_by_google} alt="Powered by Google">
+                </img>
+              </ListGroup.Item>
+            </ListGroup>}
+          </div>
+        </Offcanvas.Body>
+      </Offcanvas>
+    )
+  }
+
+  function SearchIcon() {
+    return (
+      <a className="submission-search-icon" onClick={() => { setSearch(true) }}>
+        <img width={60} height={60} src={magnifierLogo} alt='Search' />
+      </a>
+    )
   }
 
   if (loadError)
@@ -368,9 +386,11 @@ export default function Submission() {
     return <div>Loading...</div>
   return (
     <>
-      <div className="submission-navbar">
+      <div id="submission-navbar">
         <Header />
       </div>
+      <SearchOffcanvas />
+      <SearchIcon />
       <InfoBox />
       <GoogleMap
         id="google-map"
@@ -434,7 +454,7 @@ export default function Submission() {
           <MarkerInfoWindow marker={selected} />
         </InfoWindow>) : null}
       </GoogleMap>
-      <Search />
+      <SubmitButton />
     </>
   )
 }
