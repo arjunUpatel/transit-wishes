@@ -21,13 +21,6 @@
   cursor: pointer;
 }
 
-.submission-infobox {
-  position: absolute;
-  z-index: 2;
-  top: 80px;
-  left: 1%
-}
-
 .submit-button {
   position: absolute;
   z-index: 5;
@@ -47,8 +40,8 @@
 .submission-search-icon {
   position: absolute;
   z-index: 2;
-  right: 20px;
-  top: 80px;
+  left: 20px;
+  top: 160px;
   border-radius: 60px;
   cursor: pointer;
   outline: 3px solid white;
@@ -56,6 +49,38 @@
 }
 
 .submission-search-icon:hover {
+  transition: ease .5s;
+  outline: 3px solid black;
+}
+
+.submission-info-icon {
+  position: absolute;
+  z-index: 2;
+  left: 20px;
+  top: 85px;
+  border-radius: 60px;
+  cursor: pointer;
+  outline: 3px solid white;
+  transition: ease .5s;
+}
+
+.submission-info-icon:hover {
+  transition: ease .5s;
+  outline: 3px solid black;
+}
+
+.submission-recenter-icon {
+  position: absolute;
+  z-index: 2;
+  left: 20px;
+  top: 235px;
+  border-radius: 60px;
+  cursor: pointer;
+  outline: 3px solid white;
+  transition: ease .5s;
+}
+
+.submission-recenter-icon:hover {
   transition: ease .5s;
   outline: 3px solid black;
 }

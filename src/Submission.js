@@ -8,13 +8,14 @@ import powered_by_google from "./images/powered-by-google-on-white.png"
 import Form from 'react-bootstrap/Form'
 import InputGroup from 'react-bootstrap/InputGroup'
 import ListGroup from "react-bootstrap/ListGroup"
-import angle_right from './images/angle-right.png'
-import Card from 'react-bootstrap/Card'
-import Toast from 'react-bootstrap/Toast'
 import Button from "react-bootstrap/Button"
 import ButtonGroup from "react-bootstrap/ButtonGroup"
-import magnifierLogo from "./images/magnifier.png"
+import magnifierIcon from "./images/magnifier.png"
 import Offcanvas from 'react-bootstrap/Offcanvas'
+import infoIcon from './images/information.png'
+import recenterIcon from './images/recenter.png'
+import OverlayTrigger from "react-bootstrap/OverlayTrigger"
+import Tooltip from "react-bootstrap/Tooltip"
 
 export default function Submission() {
 
@@ -26,6 +27,7 @@ export default function Submission() {
   const [placementIdx, setPlacementIdx] = useState(0)
   const [submitButtonState, setSubmitButtonState] = useState(true)
   const [search, setSearch] = useState(false)
+  const [info, setInfo] = useState(false)
 
   // key event handling
   const useKeyPress = (targetKey) => {
@@ -131,32 +133,6 @@ export default function Submission() {
   }
   const initialState = { selectedIndex: -1 };
 
-  function InfoBox() {
-    const text = () => {
-      if (!unconfirmedMarker && placementIdx === confirmedMarkers.length) {
-        return "Click on the map to place an origin marker"
-      } else if (unconfirmedMarker && placementIdx === confirmedMarkers.length) {
-        return "Click on the map to change the location of the marker. Double click the bouncing marker to confirm its location"
-      } else if (!unconfirmedMarker && confirmedMarkers[placementIdx].length < 2) {
-        return "Click on the map to place the destination marker"
-      } else if (unconfirmedMarker && confirmedMarkers[placementIdx].length < 2) {
-        return "Click on the map to change the location of the marker. Double click the bouncing marker to confirm its location"
-      } else if (unconfirmedMarker && placementIdx !== confirmedMarkers.length) {
-        return "Click on the map to change the location of the marker.Double click the bouncing marker to confirm its location"
-      }
-      return ""
-    }
-
-    return (
-      <div className='submission-infobox'>
-        <Card body>
-          <img width={25} height={25} src={angle_right} alt='Todo:' />
-          {text()}
-        </Card>
-      </div>
-    )
-  }
-
   function MarkerInfoWindow({ marker }) {
     const removeConfirmedMarker = () => {
       const confirmedMarkersArr = confirmedMarkers
@@ -206,7 +182,7 @@ export default function Submission() {
       }
     }
 
-    if (marker != unconfirmedMarker && marker == selected) {
+    if (marker !== unconfirmedMarker && marker === selected) {
       return (
         <ButtonGroup vertical size="sm">
           <Button variant="outline-primary" onClick={onEditClick} tabIndex={-1}>Edit</Button>
@@ -217,6 +193,11 @@ export default function Submission() {
   }
 
   function SubmitButton() {
+
+    const handleClick = () => {
+      console.log('submit stuff to server')
+    }
+
     if (!unconfirmedMarker && placementIdx === confirmedMarkers.length) {
       setSubmitButtonState(false)
     } else {
@@ -224,7 +205,7 @@ export default function Submission() {
     }
     return (
       <div className="submit-button">
-        <Button id='submission-button' variant='success' disabled={submitButtonState}>Submit</Button>
+        <Button id='submission-button' variant='success' disabled={submitButtonState} onClick={handleClick}>Submit</Button>
       </div>
     )
   }
@@ -372,11 +353,93 @@ export default function Submission() {
     )
   }
 
-  function SearchIcon() {
+  function InfoOffcanvas() {
     return (
-      <a className="submission-search-icon" onClick={() => { setSearch(true) }}>
-        <img width={60} height={60} src={magnifierLogo} alt='Search' />
-      </a>
+      <Offcanvas show={info} onHide={() => { setInfo(false) }}>
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>Info</Offcanvas.Title>
+        </Offcanvas.Header>
+        <Offcanvas.Body>
+          <Offcanvas.Title>Basic stuff</Offcanvas.Title>
+          <ul>
+            <li>Click on the map to spawn a bouncing marker.</li>
+            <li>Click on the map to change the location of a bouncing marker if one exists.</li>
+            <li>Double click a bouncing marker to confirm its location.</li>
+            <li>Right click on a placed marker to reveal options to edit its location or remove it and its pair completely.</li>
+          </ul>
+          <Offcanvas.Title>Helpful to know</Offcanvas.Title>
+          <ul>
+            <li>Press the <img width={20} height={20} src={magnifierIcon} alt='Search' /> button to quickly pan to a desired location.</li>
+            <li>Press the <img width={20} height={20} src={magnifierIcon} alt='Search' /> button to re-center the map onto an existing bouncing marker.</li>
+            <li>Press the Submit button to commit your transit wishes.</li>
+          </ul>
+          <Offcanvas.Title>A few rules</Offcanvas.Title>
+          <ul>
+            <li>If there is a bouncing marker on the map, editing or removing a placed marker is not allowed until the bouncing marker is placed.</li>
+            <li>Submitting data will not be available until all bouncing markers have been placed and all markers are in pairs</li>
+          </ul>
+        </Offcanvas.Body>
+      </Offcanvas>
+    )
+  }
+
+  function RecenterButton() {
+
+    const renderTooltip = (props) => (
+      <Tooltip id="button-tooltip" {...props}>
+        Recenter
+      </Tooltip>
+    )
+
+    return (
+      <OverlayTrigger
+        placement="right"
+        delay={{ show: 200, hide: 300 }}
+        overlay={renderTooltip}>
+        <span className="submission-recenter-icon">
+          <img width={60} height={60} src={recenterIcon} alt='Recenter' />
+        </span>
+      </OverlayTrigger>
+    )
+  }
+
+  function InfoButton() {
+
+    const renderTooltip = (props) => (
+      <Tooltip id="button-tooltip" {...props}>
+        Help
+      </Tooltip>
+    )
+
+    return (
+      <OverlayTrigger
+        placement="right"
+        delay={{ show: 200, hide: 300 }}
+        overlay={renderTooltip}>
+        <span className="submission-info-icon" onClick={() => { setInfo(true) }}>
+          <img width={60} height={60} src={infoIcon} alt='Info' />
+        </span>
+      </OverlayTrigger>
+    )
+  }
+
+  function SearchButton() {
+
+    const renderTooltip = (props) => (
+      <Tooltip id="button-tooltip" {...props}>
+        Search locations
+      </Tooltip>
+    )
+
+    return (
+      <OverlayTrigger
+        placement="right"
+        delay={{ show: 200, hide: 300 }}
+        overlay={renderTooltip}>
+        <span className="submission-search-icon" onClick={() => { setSearch(true) }}>
+          <img width={60} height={60} src={magnifierIcon} alt='Search' />
+        </span>
+      </OverlayTrigger>
     )
   }
 
@@ -390,8 +453,10 @@ export default function Submission() {
         <Header />
       </div>
       <SearchOffcanvas />
-      <SearchIcon />
-      <InfoBox />
+      <SearchButton />
+      <InfoButton />
+      <InfoOffcanvas />
+      <RecenterButton />
       <GoogleMap
         id="google-map"
         mapContainerClassName='submission-map-container'
