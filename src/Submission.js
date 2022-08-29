@@ -16,6 +16,11 @@ import infoIcon from './images/information.png'
 import recenterIcon from './images/recenter.png'
 import OverlayTrigger from "react-bootstrap/OverlayTrigger"
 import Tooltip from "react-bootstrap/Tooltip"
+import usaGeoJSON from './usa.json'
+import { geoContains } from 'd3-geo'
+import Toast from 'react-bootstrap/Toast'
+import ToastContainer from 'react-bootstrap/ToastContainer'
+import ProgressBar from 'react-bootstrap/ProgressBar';
 
 export default function Submission() {
 
@@ -28,6 +33,8 @@ export default function Submission() {
   const [submitButtonState, setSubmitButtonState] = useState(true)
   const [search, setSearch] = useState(false)
   const [info, setInfo] = useState(false)
+  const [toast, setToast] = useState(false)
+  const [toastMsg, setToastMsg] = useState('')
 
   // key event handling
   const useKeyPress = (targetKey) => {
@@ -100,7 +107,8 @@ export default function Submission() {
 
   const onUnconfirmedMarkerDblClick = () => {
     const confirmedMarkersArr = confirmedMarkers
-    if (unconfirmedMarker) {
+    const inUSA = geoContains(usaGeoJSON, [unconfirmedMarker.lng, unconfirmedMarker.lat])
+    if (unconfirmedMarker && inUSA) {
       if (placementIdx === confirmedMarkersArr.length) {
         confirmedMarkersArr.push([{
           lat: unconfirmedMarker.lat,
@@ -129,6 +137,9 @@ export default function Submission() {
       setConfirmedMarkers(confirmedMarkersArr)
       setUnconfirmedMarker(null)
       setSelected(null)
+    } else {
+      setToastMsg('You cannot place markers outside the United States!')
+      setToast(true)
     }
   }
   const initialState = { selectedIndex: -1 };
@@ -171,7 +182,8 @@ export default function Submission() {
         setSelected(null)
       }
       else {
-        // show error message
+        setToastMsg('You have a bouncing marker on the map. Confirm its location to be able to edit the location of this marker!')
+        setToast(true)
       }
     }
 
@@ -205,7 +217,7 @@ export default function Submission() {
     }
     return (
       <div className="submit-button">
-        <Button id='submission-button' variant='success' disabled={submitButtonState} onClick={handleClick}>Submit</Button>
+        <Button size='lg' id='submission-button' variant='success' disabled={submitButtonState} onClick={handleClick}>Submit</Button>
       </div>
     )
   }
@@ -370,13 +382,14 @@ export default function Submission() {
           <Offcanvas.Title>Helpful to know</Offcanvas.Title>
           <ul>
             <li>Press the <img width={20} height={20} src={magnifierIcon} alt='Search' /> button to quickly pan to a desired location.</li>
-            <li>Press the <img width={20} height={20} src={magnifierIcon} alt='Search' /> button to re-center the map onto an existing bouncing marker.</li>
+            <li>Press the <img width={20} height={20} src={recenterIcon} alt='Search' /> button to re-center the map onto an existing bouncing marker.</li>
             <li>Press the Submit button to commit your transit wishes.</li>
           </ul>
           <Offcanvas.Title>A few rules</Offcanvas.Title>
           <ul>
             <li>If there is a bouncing marker on the map, editing or removing a placed marker is not allowed until the bouncing marker is placed.</li>
             <li>Submitting data will not be available until all bouncing markers have been placed and all markers are in pairs</li>
+            <li>You cannot place markers outside of the United States</li>
           </ul>
         </Offcanvas.Body>
       </Offcanvas>
@@ -385,6 +398,14 @@ export default function Submission() {
 
   function RecenterButton() {
 
+    const handleClick = () => {
+      if (unconfirmedMarker) {
+        panTo({ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }, 15)
+      } else {
+        setToastMsg('There are no bouncing markers to recenter to!')
+        setToast(true)
+      }
+    }
     const renderTooltip = (props) => (
       <Tooltip id="button-tooltip" {...props}>
         Recenter
@@ -396,7 +417,7 @@ export default function Submission() {
         placement="right"
         delay={{ show: 200, hide: 300 }}
         overlay={renderTooltip}>
-        <span className="submission-recenter-icon">
+        <span className="submission-recenter-icon" onClick={handleClick}>
           <img width={60} height={60} src={recenterIcon} alt='Recenter' />
         </span>
       </OverlayTrigger>
@@ -420,6 +441,20 @@ export default function Submission() {
           <img width={60} height={60} src={infoIcon} alt='Info' />
         </span>
       </OverlayTrigger>
+    )
+  }
+
+  function Toaster() {
+    return (
+      <ToastContainer className='submission-toaster'>
+        <Toast show={toast} bg='warning' autohide={true} onClose={() => { setToast(false) }}>
+          <Toast.Header>
+            <strong className="me-auto">Information</strong>
+          </Toast.Header>
+          <Toast.Body>{toastMsg}</Toast.Body>
+          <ProgressBar now={60}/>
+        </Toast>
+      </ToastContainer>
     )
   }
 
@@ -457,6 +492,7 @@ export default function Submission() {
       <InfoButton />
       <InfoOffcanvas />
       <RecenterButton />
+      <Toaster />
       <GoogleMap
         id="google-map"
         mapContainerClassName='submission-map-container'
