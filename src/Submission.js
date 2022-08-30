@@ -20,7 +20,6 @@ import usaGeoJSON from './usa.json'
 import { geoContains } from 'd3-geo'
 import Toast from 'react-bootstrap/Toast'
 import ToastContainer from 'react-bootstrap/ToastContainer'
-import ProgressBar from 'react-bootstrap/ProgressBar';
 
 export default function Submission() {
 
@@ -35,6 +34,7 @@ export default function Submission() {
   const [info, setInfo] = useState(false)
   const [toast, setToast] = useState(false)
   const [toastMsg, setToastMsg] = useState('')
+  const [editing, setEditing] = useState(null)
 
   // key event handling
   const useKeyPress = (targetKey) => {
@@ -109,29 +109,27 @@ export default function Submission() {
     const confirmedMarkersArr = confirmedMarkers
     const inUSA = geoContains(usaGeoJSON, [unconfirmedMarker.lng, unconfirmedMarker.lat])
     if (unconfirmedMarker && inUSA) {
-      if (placementIdx === confirmedMarkersArr.length) {
+      if (editing !== null) {
+        for (let i = 0; i < confirmedMarkersArr[editing].length; i++) {
+          if (confirmedMarkersArr[editing][i] == null) {
+            confirmedMarkersArr[editing][i] = {
+              lat: unconfirmedMarker.lat,
+              lng: unconfirmedMarker.lng,
+            }
+            break
+          }
+        }
+        setEditing(null)
+      } else if (placementIdx === confirmedMarkersArr.length) {
         confirmedMarkersArr.push([{
           lat: unconfirmedMarker.lat,
           lng: unconfirmedMarker.lng,
         }])
-      } else {
-        if (confirmedMarkers[placementIdx].length < 2) {
-          confirmedMarkersArr[placementIdx].push({
-            lat: unconfirmedMarker.lat,
-            lng: unconfirmedMarker.lng,
-          })
-        }
-        else {
-          for (let i = 0; i < confirmedMarkersArr[placementIdx].length; i++) {
-            if (confirmedMarkersArr[placementIdx][i] == null) {
-              confirmedMarkersArr[placementIdx][i] = {
-                lat: unconfirmedMarker.lat,
-                lng: unconfirmedMarker.lng,
-              }
-              break
-            }
-          }
-        }
+      } else if (confirmedMarkers[placementIdx].length < 2) {
+        confirmedMarkersArr[placementIdx].push({
+          lat: unconfirmedMarker.lat,
+          lng: unconfirmedMarker.lng,
+        })
         setPlacementIdx(confirmedMarkersArr.length)
       }
       setConfirmedMarkers(confirmedMarkersArr)
@@ -145,17 +143,20 @@ export default function Submission() {
   const initialState = { selectedIndex: -1 };
 
   function MarkerInfoWindow({ marker }) {
+
     const removeConfirmedMarker = () => {
       const confirmedMarkersArr = confirmedMarkers
+      let res = null
       for (let i = 0; i < confirmedMarkersArr.length; i++) {
         let index = confirmedMarkersArr[i].indexOf(marker)
         if (index > -1) {
+          res = i
           confirmedMarkersArr[i].splice(index, 1, null)
-          setPlacementIdx(i)
           break
         }
       }
       setConfirmedMarkers(confirmedMarkersArr)
+      return res
     }
 
     const removeConfirmedMarkerPair = () => {
@@ -176,10 +177,10 @@ export default function Submission() {
     }
 
     const onEditClick = () => {
-      if (placementIdx === confirmedMarkers.length && !unconfirmedMarker) {
-        removeConfirmedMarker()
+      if (!unconfirmedMarker) {
         setUnconfirmedMarker(marker)
         setSelected(null)
+        setEditing(removeConfirmedMarker())
       }
       else {
         setToastMsg('You have a bouncing marker on the map. Confirm its location to be able to edit the location of this marker!')
@@ -188,7 +189,7 @@ export default function Submission() {
     }
 
     const onRemoveClick = () => {
-      if (placementIdx === confirmedMarkers.length && !unconfirmedMarker) {
+      if (!unconfirmedMarker) {
         removeConfirmedMarkerPair()
         setSelected(null)
       }
@@ -445,6 +446,7 @@ export default function Submission() {
   }
 
   function Toaster() {
+
     return (
       <ToastContainer className='submission-toaster'>
         <Toast show={toast} bg='warning' autohide={true} onClose={() => { setToast(false) }}>
@@ -452,7 +454,6 @@ export default function Submission() {
             <strong className="me-auto">Information</strong>
           </Toast.Header>
           <Toast.Body>{toastMsg}</Toast.Body>
-          <ProgressBar now={60}/>
         </Toast>
       </ToastContainer>
     )
