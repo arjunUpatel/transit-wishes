@@ -18,8 +18,8 @@ import OverlayTrigger from "react-bootstrap/OverlayTrigger"
 import Tooltip from "react-bootstrap/Tooltip"
 import usaGeoJSON from './usa.json'
 import { geoContains } from 'd3-geo'
-import Toast from 'react-bootstrap/Toast'
-import ToastContainer from 'react-bootstrap/ToastContainer'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Submission() {
 
@@ -32,9 +32,14 @@ export default function Submission() {
   const [submitButtonState, setSubmitButtonState] = useState(true)
   const [search, setSearch] = useState(false)
   const [info, setInfo] = useState(false)
-  const [toast, setToast] = useState(false)
-  const [toastMsg, setToastMsg] = useState('')
   const [editing, setEditing] = useState(null)
+
+  const notify = (str) => toast.warning(str, {
+    position: "top-right",
+    autoClose: 7500,
+    hideProgressBar: false,
+    pauseOnHover: true,
+  })
 
   // key event handling
   const useKeyPress = (targetKey) => {
@@ -136,8 +141,7 @@ export default function Submission() {
       setUnconfirmedMarker(null)
       setSelected(null)
     } else {
-      setToastMsg('You cannot place markers outside the United States!')
-      setToast(true)
+      notify('You cannot place markers outside the United States!!')
     }
   }
   const initialState = { selectedIndex: -1 };
@@ -183,16 +187,13 @@ export default function Submission() {
         setEditing(removeConfirmedMarker())
       }
       else {
-        setToastMsg('You have a bouncing marker on the map. Confirm its location to be able to edit the location of this marker!')
-        setToast(true)
+        notify('You have a bouncing marker on the map. Confirm its location to be able to edit the location of this marker!')
       }
     }
 
     const onRemoveClick = () => {
-      if (!unconfirmedMarker) {
-        removeConfirmedMarkerPair()
-        setSelected(null)
-      }
+      removeConfirmedMarkerPair()
+      setSelected(null)
     }
 
     if (marker !== unconfirmedMarker && marker === selected) {
@@ -403,8 +404,7 @@ export default function Submission() {
       if (unconfirmedMarker) {
         panTo({ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }, 15)
       } else {
-        setToastMsg('There are no bouncing markers to recenter to!')
-        setToast(true)
+        notify('There are no bouncing markers to recenter to!')
       }
     }
     const renderTooltip = (props) => (
@@ -445,19 +445,13 @@ export default function Submission() {
     )
   }
 
-  function Toaster() {
-
+  const Toast = React.memo(function Toast() {
     return (
-      <ToastContainer className='submission-toaster'>
-        <Toast show={toast} bg='warning' autohide={true} onClose={() => { setToast(false) }}>
-          <Toast.Header>
-            <strong className="me-auto">Information</strong>
-          </Toast.Header>
-          <Toast.Body>{toastMsg}</Toast.Body>
-        </Toast>
-      </ToastContainer>
+      <div className='submission-toaster'>
+        <ToastContainer />
+      </div>
     )
-  }
+  })
 
   function SearchButton() {
 
@@ -493,7 +487,7 @@ export default function Submission() {
       <InfoButton />
       <InfoOffcanvas />
       <RecenterButton />
-      <Toaster />
+      <Toast />
       <GoogleMap
         id="google-map"
         mapContainerClassName='submission-map-container'
