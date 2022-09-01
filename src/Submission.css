@@ -87,7 +87,7 @@
 
 .submission-toaster {
   position: absolute;
-  z-index: 3;
+  z-index: 2;
   top: 65px;
   left: 100%;
   transform: translateX(-100%);

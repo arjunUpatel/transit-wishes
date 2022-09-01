@@ -6,7 +6,7 @@ import './Map.css'
 
 export default function Map() {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_MAPS_API_KEY,
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_API_KEY,
   })
 
   if (!isLoaded) return <div>Loading...</div>

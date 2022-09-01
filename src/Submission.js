@@ -19,7 +19,10 @@ import Tooltip from "react-bootstrap/Tooltip"
 import usaGeoJSON from './usa.json'
 import { geoContains } from 'd3-geo'
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import 'react-toastify/dist/ReactToastify.css'
+import Modal from 'react-bootstrap/Modal'
+import { db } from './firebase-config'
+import { collection, addDoc } from "firebase/firestore";
 
 export default function Submission() {
 
@@ -33,12 +36,14 @@ export default function Submission() {
   const [search, setSearch] = useState(false)
   const [info, setInfo] = useState(false)
   const [editing, setEditing] = useState(null)
+  const [modal, setModal] = useState(false)
 
-  const notify = (str) => toast.warning(str, {
+  const notify = (str) => toast.error(str, {
     position: "top-right",
     autoClose: 7500,
     hideProgressBar: false,
     pauseOnHover: true,
+    theme: 'colored'
   })
 
   // key event handling
@@ -69,7 +74,7 @@ export default function Submission() {
     return keyPressed
   }
 
-  // google maps setup stuff
+  const initialState = { selectedIndex: -1 };
   const center = { lat: 40, lng: -99 }
   const options = {
     disableDefaultUI: true,
@@ -79,19 +84,19 @@ export default function Submission() {
   }
   const mapRef = useRef()
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.REACT_APP_MAPS_API_KEY,
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_API_KEY,
     libraries,
   })
   const onMapLoad = useCallback((map) => {
     mapRef.current = map
     panTo(center, 4.5)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const panTo = useCallback(({ lat, lng }, zoom) => {
     mapRef.current.panTo({ lat, lng })
     mapRef.current.setZoom(zoom)
   }, [])
-
 
   // marker stuff
   const onMapClick = (event) => {
@@ -144,7 +149,6 @@ export default function Submission() {
       notify('You cannot place markers outside the United States!!')
     }
   }
-  const initialState = { selectedIndex: -1 };
 
   function MarkerInfoWindow({ marker }) {
 
@@ -208,19 +212,15 @@ export default function Submission() {
 
   function SubmitButton() {
 
-    const handleClick = () => {
-      console.log('submit stuff to server')
-    }
-
-    if (!unconfirmedMarker && placementIdx === confirmedMarkers.length) {
+    if (!unconfirmedMarker && placementIdx === confirmedMarkers.length && placementIdx !== 0) {
       setSubmitButtonState(false)
     } else {
       setSubmitButtonState(true)
     }
     return (
       <div className="submit-button">
-        <Button size='lg' id='submission-button' variant='success' disabled={submitButtonState} onClick={handleClick}>Submit</Button>
-      </div>
+        <Button size='lg' id='submission-button' variant='success' disabled={submitButtonState} onClick={() => { setModal(true) }}>Submit</Button>
+      </div >
     )
   }
 
@@ -308,6 +308,7 @@ export default function Submission() {
         handleSelect(data[state.selectedIndex])
         dispatch({ type: 'clear' })
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enterPressed])
 
     const renderSuggestions = () => data.map((suggestion, i) => {
@@ -448,7 +449,7 @@ export default function Submission() {
   const Toast = React.memo(function Toast() {
     return (
       <div className='submission-toaster'>
-        <ToastContainer />
+        <ToastContainer limit={5} />
       </div>
     )
   })
@@ -470,6 +471,41 @@ export default function Submission() {
           <img width={60} height={60} src={magnifierIcon} alt='Search' />
         </span>
       </OverlayTrigger>
+    )
+  }
+
+  function SubmissionModal() {
+    // handle svg stuff before allowing submission of data
+    const handleSubmit = async () => {
+      let latLng
+      for (let i = 0; i < confirmedMarkers.length; i++) {
+        latLng = { ...confirmedMarkers[i] }
+        await addDoc(collection(db, "markers"), {
+          latLng
+        })
+      }
+      console.log(latLng)
+      // add loading to button while this function runs
+    }
+
+    return (
+      <Modal
+        show={modal}
+        onHide={() => { setModal(false) }}
+        backdrop="static"
+        keyboard={false}>
+        <Modal.Header closeButton>
+          <Modal.Title>Submit Data</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Submission Modal
+          {/* Yeah CAPTCHAs are annoying, but they help reduce bot spam data. */}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => { setModal(false) }}>Close</Button>
+          <Button variant="primary" onClick={handleSubmit}>Finish</Button>
+        </Modal.Footer>
+      </Modal>
     )
   }
 
@@ -501,7 +537,6 @@ export default function Submission() {
               marker ? (
                 <Marker
                   position={{ lat: marker.lat, lng: marker.lng }}
-                  // onClick={} show info about marker
                   onRightClick={() => {
                     setSelected(marker)
                   }}
@@ -537,7 +572,6 @@ export default function Submission() {
         {unconfirmedMarker ? (<Marker
           position={{ lat: unconfirmedMarker.lat, lng: unconfirmedMarker.lng }}
           animation={1}
-          // onClick={} show info about the marker if you decide to do so
           onDblClick={onUnconfirmedMarkerDblClick}
         />) : null}
 
@@ -551,6 +585,7 @@ export default function Submission() {
         </InfoWindow>) : null}
       </GoogleMap>
       <SubmitButton />
+      <SubmissionModal />
     </>
   )
 }
