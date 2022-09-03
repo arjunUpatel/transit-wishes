@@ -15,11 +15,16 @@ export default function Map() {
 
   const [selected, setSelected] = useState(null)
   const [info, setInfo] = useState(false)
+  const [markers, setMarkers] = useState([])
+  const [startingMarkers, setStartingMarkers] = useState([])
 
-  const markers = []
-  const startingMarkers = []
+  window.addEventListener('load', () => {
+    fetchMarkerData()
+  })
 
   const fetchMarkerData = async () => {
+    const markersArr = []
+    const startingMarkersArr = []
     const querySnapshot = await getDocs(collection(db, "markers"))
     querySnapshot.forEach((snapshot) => {
       const obj = { ...snapshot.data() }
@@ -27,9 +32,11 @@ export default function Map() {
       Object.values(obj.latLng).forEach((value) => {
         markerPair.push({ lat: value.lat, lng: value.lng })
       })
-      markers.push(markerPair)
-      startingMarkers.push(markerPair[0])
+      markersArr.push(markerPair)
+      startingMarkersArr.push(markerPair[0])
     })
+    setMarkers(markersArr)
+    setStartingMarkers(startingMarkersArr)
   }
 
   const center = { lat: 40, lng: -99 }
@@ -39,6 +46,7 @@ export default function Map() {
     disableAutoPan: true,
     clickableIcons: false,
   }
+
   const mapRef = useRef()
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_API_KEY,
@@ -46,7 +54,6 @@ export default function Map() {
   const onMapLoad = useCallback((map) => {
     mapRef.current = map
     panTo(center, 4.5)
-    fetchMarkerData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -89,7 +96,7 @@ export default function Map() {
 
   if (loadError)
     return <div>Error loading maps</div>
-  if (!isLoaded)
+  if (!isLoaded || !markers)
     return <div>Loading...</div>
   return (
     <>
@@ -104,10 +111,7 @@ export default function Map() {
         options={options}
         onLoad={onMapLoad}
       >
-        <MarkerClusterer
-          imagePath='https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
-        // imageExtension="png"
-        >
+        <MarkerClusterer imagePath='https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'>
           {(clusterer) => startingMarkers.map((location, i) => (
             <Marker
               key={i}
